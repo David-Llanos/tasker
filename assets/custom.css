@@ -1,0 +1,24 @@
+/* .nav-pills .nav-linkactive{
+    color :aliceblue;
+    background-color: orange;
+} */
+
+.menu {
+    color : white;
+    background-color: green;
+    margin: 15px;
+}
+
+html, body {
+    margin:0;
+    padding:0;
+    overflow-x: hidden;
+}
+
+.nav-link {
+    display: block;
+    padding: .5rem 1rem;
+    color: white;
+    text-decoration: none;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out;
+  }
