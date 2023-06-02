@@ -5,8 +5,6 @@ from dash import dcc, html, dash_table, Output, Input, State, MATCH
 import dash_bootstrap_components as dbc
 import math
 
-
-
 # initialize Dash
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -18,26 +16,6 @@ csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
 print(csv_files)
 
 # create a DataTable, "Add Row" button and "Save" button for each CSV file
-color_list = [
-    "#00FF00", # Lime
-    "#00FFFF", # Aqua
-    "#FF00FF", # Fuchsia
-    "#800000", # Maroon
-    "#008000", # Green
-    "#808000", # Olive
-    "#800080", # Purple
-    "#008080", # Teal
-    "#C0C0C0", # Silver
-    "#FF6347", # Tomato
-    "#ADFF2F", # GreenYellow
-    "#FFD700", # Gold
-    "#1E90FF", # DodgerBlue
-    "#DDA0DD", # Plum
-    "#20B2AA", # LightSeaGreen
-    "#FFA07A"  # LightSalmon
-]
-
-color_counter = 0
 children = []
 for i, file in enumerate(csv_files):
     df = pd.read_csv(os.path.join(directory, file))
@@ -48,25 +26,11 @@ for i, file in enumerate(csv_files):
         page_size=2,
         page_current= 0, 
         editable=True,
-        style_header={'backgroundColor': color_list[color_counter]}, # Apply color to table
     )
-    last_page_button = html.Button('Last Page', 
-                                   id={'type': 'dynamic-last-page-button', 'index': file}, 
-                                   style={'backgroundColor': color_list[color_counter]})  # Apply color to button
-    add_button = html.Button('Add Row', 
-                             id={'type': 'dynamic-add-button', 'index': file}, 
-                             style={'backgroundColor': color_list[color_counter]})  # Apply color to button
-    save_button = html.Button('Save', 
-                              id={'type': 'dynamic-save-button', 'index': file}, 
-                              style={'backgroundColor': color_list[color_counter]})  # Apply color to button
-    children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])  # Added the last_page_button here
-
-    # Increment the color counter
-    color_counter += 1
-
-    # If we've gone through all the colors, reset the counter
-    if color_counter == len(color_list):
-        color_counter = 0
+    last_page_button = html.Button('Last Page', id={'type': 'dynamic-last-page-button', 'index': file}, n_clicks=0)
+    add_button = html.Button('Add Row', id={'type': 'dynamic-add-button', 'index': file})
+    save_button = html.Button('Save', id={'type': 'dynamic-save-button', 'index': file})
+    children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
 
 
 
