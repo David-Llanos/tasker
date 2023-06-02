@@ -3,6 +3,7 @@ import pandas as pd
 import dash
 from dash import dcc, html, dash_table, Output, Input, State, MATCH
 import dash_bootstrap_components as dbc
+import math
 
 # initialize Dash
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -19,14 +20,19 @@ children = []
 for i, file in enumerate(csv_files):
     df = pd.read_csv(os.path.join(directory, file))
     table = dash_table.DataTable(
-        id={'type': 'dynamic-table', 'index': i},
+        id={'type': 'dynamic-table', 'index': file}, 
         columns=[{"name": c, "id": c} for c in df.columns],
         data=df.to_dict('records'),
+        page_size=2,
+        page_current= 0, 
         editable=True,
     )
-    add_button = html.Button('Add Row', id={'type': 'dynamic-add-button', 'index': i})
-    save_button = html.Button('Save', id={'type': 'dynamic-save-button', 'index': i})
-    children.extend([html.H2(file), table, add_button, save_button, html.Hr()])  # H2 for the file name, Hr for separating the tables
+    last_page_button = html.Button('Last Page', id={'type': 'dynamic-last-page-button', 'index': file}, n_clicks=0)
+    add_button = html.Button('Add Row', id={'type': 'dynamic-add-button', 'index': file})
+    save_button = html.Button('Save', id={'type': 'dynamic-save-button', 'index': file})
+    children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
+
+
 
 app.layout = html.Div(children=children)
 
@@ -40,18 +46,37 @@ def add_row(n_clicks, rows, columns):
         rows.append({c['id']: '' for c in columns})
     return rows
 
+
 @app.callback(
     Output({'type': 'dynamic-save-button', 'index': MATCH}, 'children'),
     Input({'type': 'dynamic-save-button', 'index': MATCH}, 'n_clicks'),
-    State({'type': 'dynamic-table', 'index': MATCH}, 'data'))
-def save_changes(n_clicks, rows):
-    filename=''
-    if n_clicks is not None:
+    State({'type': 'dynamic-table', 'index': MATCH}, 'data'),
+    State({'type': 'dynamic-save-button', 'index': MATCH}, 'index'))  # new State to get the file name
+def save_changes(n_clicks, rows, filename):  # added filename argument
+    if n_clicks is not None and filename is not None:
         df = pd.DataFrame(rows)
-        filename=f"{directory}/{n_clicks}.csv"
-        df.to_csv(filename, index=False)
-        print(f"{filename} saved !")
+        file_path = os.path.join(directory, filename)
+        df.to_csv(file_path, index=False)
+        print(f"{file_path} saved !")
     return 'Save'
+
+
+
+# The callback for going to last page
+
+@app.callback(
+    Output({'type': 'dynamic-table', 'index': MATCH}, 'page_current'),
+    Input({'type': 'dynamic-last-page-button', 'index': MATCH}, 'n_clicks'),
+    State({'type': 'dynamic-table', 'index': MATCH}, 'data'),
+    State({'type': 'dynamic-table', 'index': MATCH}, 'page_current'),
+    prevent_initial_call=True)
+def go_to_last_page(n_clicks, rows, current_page):
+    if n_clicks is not None:
+        last_page = (len(rows) - 1) // 2  # Updated formula
+        return last_page
+    return dash.no_update
+
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
