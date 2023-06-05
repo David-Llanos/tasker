@@ -87,18 +87,32 @@ def add_row(n_clicks, rows, columns):
         rows.append({c['id']: '' for c in columns})
     return rows
 
+# @app.callback(
+#     Output({'type': 'dynamic-save-button', 'index': MATCH}, 'children'),
+#     Input({'type': 'dynamic-save-button', 'index': MATCH}, 'n_clicks'),
+#     State({'type': 'dynamic-table', 'index': MATCH}, 'data'),
+#     State({'type': 'dynamic-save-button', 'index': MATCH}, 'index'))  # new State to get the file name
+# def save_changes(n_clicks, rows, filename):  # added filename argument
+#     if n_clicks is not None and filename is not None:
+#         df = pd.DataFrame(rows)
+#         file_path = os.path.join(directory, filename)
+#         df.to_csv(file_path, index=False)
+#         print(f"{file_path} saved !")
+#     return 'Save'
+
 @app.callback(
     Output({'type': 'dynamic-save-button', 'index': MATCH}, 'children'),
     Input({'type': 'dynamic-save-button', 'index': MATCH}, 'n_clicks'),
     State({'type': 'dynamic-table', 'index': MATCH}, 'data'),
-    State({'type': 'dynamic-save-button', 'index': MATCH}, 'index'))  # new State to get the file name
-def save_changes(n_clicks, rows, filename):  # added filename argument
-    if n_clicks is not None and filename is not None:
+    State({'type': 'dynamic-save-button', 'index': MATCH}, 'id'))  # new State to get the file name
+def save_changes(n_clicks, rows, button_id):  # added filename argument
+    if n_clicks is not None and button_id is not None:
         df = pd.DataFrame(rows)
-        file_path = os.path.join(directory, filename)
+        file_path = os.path.join(directory, button_id['index'])  # Here use 'index' from id to get the file name
         df.to_csv(file_path, index=False)
         print(f"{file_path} saved !")
     return 'Save'
+
 
 @app.callback(
     Output({'type': 'dynamic-table', 'index': MATCH}, 'page_current'),
