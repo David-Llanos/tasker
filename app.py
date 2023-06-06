@@ -64,6 +64,8 @@ def refresh():
         save_button = html.Button('Save', 
                                 id={'type': 'dynamic-save-button', 'index': file}, 
                                 style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+      
+
         children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
 
         # increment color_counter and use modulo to keep it within the length of color_list
@@ -87,18 +89,6 @@ def add_row(n_clicks, rows, columns):
         rows.append({c['id']: '' for c in columns})
     return rows
 
-# @app.callback(
-#     Output({'type': 'dynamic-save-button', 'index': MATCH}, 'children'),
-#     Input({'type': 'dynamic-save-button', 'index': MATCH}, 'n_clicks'),
-#     State({'type': 'dynamic-table', 'index': MATCH}, 'data'),
-#     State({'type': 'dynamic-save-button', 'index': MATCH}, 'index'))  # new State to get the file name
-# def save_changes(n_clicks, rows, filename):  # added filename argument
-#     if n_clicks is not None and filename is not None:
-#         df = pd.DataFrame(rows)
-#         file_path = os.path.join(directory, filename)
-#         df.to_csv(file_path, index=False)
-#         print(f"{file_path} saved !")
-#     return 'Save'
 
 @app.callback(
     Output({'type': 'dynamic-save-button', 'index': MATCH}, 'children'),
@@ -121,9 +111,12 @@ def save_changes(n_clicks, rows, button_id):  # added filename argument
     State({'type': 'dynamic-table', 'index': MATCH}, 'page_current'))
 def go_to_last_page(n_clicks, rows, current_page):
     if n_clicks is not None:
-        last_page = (len(rows) - 1) // 2  # Updated formula
+        page_size = 5
+        last_page = math.ceil(len(rows) / page_size) - 1
         return last_page
     return dash.no_update
+
+
 
 @app.callback(
     Output('tables-container', 'children'),
