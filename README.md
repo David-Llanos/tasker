@@ -12,4 +12,6 @@ Simple Dash application to manage tasks associated with projects. Expected funct
 9. Add a dropdown component to filter all proejcts in potential mandatory column like 'status'??? 
 10. Add a dropdown to select multiple color scales. 0% 
 11. Add dropdown to select bootstrap themes. 0%
+
+
 ![image](https://github.com/David-Llanos/tasker/assets/12718910/d7f15fdc-f3df-4c5a-bc68-533d5100c126)
