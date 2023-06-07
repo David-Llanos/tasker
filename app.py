@@ -11,10 +11,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # directory containing the CSV files
 directory = '/home/david/Documents/tasker/projects'
 
-# get a list of all CSV files in the directory
-# csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
-# print(csv_files)
-
 # create a DataTable, "Add Row" button and "Save" button for each CSV file
 color_list = [
     "#00FF00", # Lime
@@ -77,22 +73,19 @@ def refresh(files):
 
     return children
 
-
-# app.layout = html.Div([
-#     dbc.Button('Refresh', id='refresh-button', color='primary'),
-#     html.Div(id='tables-container')
-# ])
-
 app.layout = html.Div([
     dbc.Row([
         dbc.Col([
-            html.H2("Select Files"),
+            html.H2("Select Project Files"),
             dcc.Dropdown(
                 id='file-dropdown',
                 options=[{'label': i, 'value': i} for i in get_files()],
                 value=[get_files()[0]],
-                multi=True
+                multi=True,
+                clearable=False
+                
             ),
+            html.Br(),
             dbc.Button('Refresh', id='refresh-button', color='primary')
         ], width=2),
         dbc.Col([
@@ -140,14 +133,6 @@ def go_to_last_page(n_clicks, rows, current_page):
         return last_page
     return dash.no_update
 
-
-
-# @app.callback(
-#     Output('tables-container', 'children'),
-#     [Input('refresh-button', 'n_clicks')]
-# )
-# def handle_refresh(n_clicks):
-#     return refresh()
 
 # HANDLE REFRESH
 @app.callback(
