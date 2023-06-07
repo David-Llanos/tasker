@@ -12,8 +12,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 directory = '/home/david/Documents/tasker/projects'
 
 # get a list of all CSV files in the directory
-csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
-print(csv_files)
+# csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
+# print(csv_files)
 
 # create a DataTable, "Add Row" button and "Save" button for each CSV file
 color_list = [
@@ -35,15 +35,19 @@ color_list = [
     "#FFA07A"  # LightSalmon
 ]
 
-# Define the refresh function
-def refresh():
+# Define a function to get the list of files
+def get_files():
     csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
-    print(csv_files)
+    return csv_files
 
+
+# Define the refresh function
+def refresh(files):
     color_counter = 0
     children = []
-    for i, file in enumerate(csv_files):
+    for i, file in enumerate(files):
         df = pd.read_csv(os.path.join(directory, file))
+
 
         table = dash_table.DataTable(
             id={'type': 'dynamic-table', 'index': file}, 
@@ -74,11 +78,31 @@ def refresh():
     return children
 
 
+# app.layout = html.Div([
+#     dbc.Button('Refresh', id='refresh-button', color='primary'),
+#     html.Div(id='tables-container')
+# ])
+
 app.layout = html.Div([
-    dbc.Button('Refresh', id='refresh-button', color='primary'),
-    html.Div(id='tables-container')
+    dbc.Row([
+        dbc.Col([
+            html.H2("Select Files"),
+            dcc.Dropdown(
+                id='file-dropdown',
+                options=[{'label': i, 'value': i} for i in get_files()],
+                value=[get_files()[0]],
+                multi=True
+            ),
+            dbc.Button('Refresh', id='refresh-button', color='primary')
+        ], width=2),
+        dbc.Col([
+            html.Div(id='tables-container')
+        ], width=10)
+    ])
 ])
 
+
+# ADD ROW
 @app.callback(
     Output({'type': 'dynamic-table', 'index': MATCH}, 'data'),
     Input({'type': 'dynamic-add-button', 'index': MATCH}, 'n_clicks'),
@@ -89,7 +113,7 @@ def add_row(n_clicks, rows, columns):
         rows.append({c['id']: '' for c in columns})
     return rows
 
-
+# SAVE CHANGES
 @app.callback(
     Output({'type': 'dynamic-save-button', 'index': MATCH}, 'children'),
     Input({'type': 'dynamic-save-button', 'index': MATCH}, 'n_clicks'),
@@ -103,7 +127,7 @@ def save_changes(n_clicks, rows, button_id):  # added filename argument
         print(f"{file_path} saved !")
     return 'Save'
 
-
+# GO TO LAST PAGE
 @app.callback(
     Output({'type': 'dynamic-table', 'index': MATCH}, 'page_current'),
     Input({'type': 'dynamic-last-page-button', 'index': MATCH}, 'n_clicks'),
@@ -118,12 +142,21 @@ def go_to_last_page(n_clicks, rows, current_page):
 
 
 
+# @app.callback(
+#     Output('tables-container', 'children'),
+#     [Input('refresh-button', 'n_clicks')]
+# )
+# def handle_refresh(n_clicks):
+#     return refresh()
+
+# HANDLE REFRESH
 @app.callback(
     Output('tables-container', 'children'),
-    [Input('refresh-button', 'n_clicks')]
+    [Input('refresh-button', 'n_clicks'),
+     Input('file-dropdown', 'value')]
 )
-def handle_refresh(n_clicks):
-    return refresh()
+def handle_refresh(n_clicks, files):
+    return refresh(files)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
