@@ -11,10 +11,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # directory containing the CSV files
 directory = '/home/david/Documents/tasker/projects'
 
-# get a list of all CSV files in the directory
-# csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
-# print(csv_files)
-
 color_palettes = {
     'Contrasting': [
         "#FF0000", # Red
@@ -52,6 +48,7 @@ color_palettes = {
 
 
 color_indices = {}
+
 
 
 # Define a function to get the list of files
@@ -104,14 +101,13 @@ def refresh(files, palette):
 
     return children
 
-
-
 app.layout = html.Div([
     dbc.Row([
         dbc.Col([
             html.H1("tasker",style={'text-align':'center', 'color':'darkblue', 'font-style': 'italic'}),
             html.Br(),
             html.H2("select files"),
+
             dcc.Dropdown(
                 id='file-dropdown',
                 options=[{'label': i, 'value': i} for i in get_files()],
@@ -132,6 +128,7 @@ app.layout = html.Div([
             html.Br(),
 
             dbc.Button('refresh', id='refresh-button', color='primary')
+
         ], width=2),
         dbc.Col([
             html.Div(id='tables-container')
