@@ -53,54 +53,15 @@ color_list = [
     "#FFA07A"  # LightSalmon
 ]
 
+color_indices = {}
+
+
 # Define a function to get the list of files
 def get_files():
     csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
     return csv_files
 
 
-
-
-
-
-
-
-# Define the refresh function
-# def refresh(files,palette ):
-#     colors = color_palettes[palette]
-#     color_counter = 0
-#     children = []
-#     for i, file in enumerate(files):
-#         df = pd.read_csv(os.path.join(directory, file))
-
-
-#         table = dash_table.DataTable(
-#             id={'type': 'dynamic-table', 'index': file}, 
-#             columns=[{"name": c, "id": c} for c in df.columns],
-#             data=df.to_dict('records'),
-#             page_size=5,
-#             page_current= 0, 
-#             editable=True,
-#             filter_action="native" ,
-#             style_header={'backgroundColor': color_list[color_counter]}, # Apply color to table
-#             )
-#         last_page_button = html.Button('Last Page', 
-#                                     id={'type': 'dynamic-last-page-button', 'index': file}, 
-#                                     style={'backgroundColor': color_list[color_counter]})  # Apply color to button
-#         add_button = html.Button('Add Row', 
-#                                 id={'type': 'dynamic-add-button', 'index': file}, 
-#                                 style={'backgroundColor': color_list[color_counter]})  # Apply color to button
-#         save_button = html.Button('Save', 
-#                                 id={'type': 'dynamic-save-button', 'index': file}, 
-#                                 style={'backgroundColor': color_list[color_counter]})  # Apply color to button
-      
-
-#         children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
-
-#         # increment color_counter and use modulo to keep it within the length of color_list
-#         color_counter = (color_counter + 1) % len(colors)
-
-#     return children
 
 def refresh(files, palette):
     colors = color_palettes[palette]
@@ -119,18 +80,26 @@ def refresh(files, palette):
             filter_action="native",
             style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
         )
-        last_page_button = html.Button('Last Page', 
+        last_page_button = html.Button('last page', 
                                     id={'type': 'dynamic-last-page-button', 'index': file}, 
                                     style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
-        add_button = html.Button('Add Row', 
+        add_button = html.Button('add row', 
                                 id={'type': 'dynamic-add-button', 'index': file}, 
                                 style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
-        save_button = html.Button('Save', 
+        save_button = html.Button('Save :)', 
                                 id={'type': 'dynamic-save-button', 'index': file}, 
                                 style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
-      
+        
 
-        children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
+        #
+        clear_filter_button = html.Button('clear all filters', 
+                                  id={'type': 'dynamic-clear-filter-button', 'index': file}, 
+                                  style={'backgroundColor': colors[color_counter]})  # Apply color from selected palette
+
+   
+        color_indices[file] = color_counter 
+        children.extend([html.H2(file), table, clear_filter_button, last_page_button, add_button, save_button,  html.Hr()])
+
 
         # increment color_counter and use modulo to keep it within the length of color_list
         color_counter = (color_counter + 1) % len(colors)
@@ -142,23 +111,29 @@ def refresh(files, palette):
 app.layout = html.Div([
     dbc.Row([
         dbc.Col([
-            html.H2("Select Files"),
+            html.H1("tasker",style={'text-align':'center', 'color':'darkblue', 'font-style': 'italic'}),
+            html.Br(),
+            html.H2("select files"),
             dcc.Dropdown(
                 id='file-dropdown',
                 options=[{'label': i, 'value': i} for i in get_files()],
                 value=[get_files()[0]],
+                persistence=True,
+                persistence_type='local', 
                 multi=True
             ),
             html.Br(),
-            html.H2("Select Color Palette"),
+            html.H2("select color palette"),
             dcc.Dropdown(
                 id='palette-dropdown',
                 options=[{'label': i, 'value': i} for i in color_palettes.keys()],
-                value='Palette 1'
+                value='Palette 1',
+                persistence=True,
+                persistence_type='local' 
             ),
             html.Br(),
 
-            dbc.Button('Refresh', id='refresh-button', color='primary')
+            dbc.Button('refresh', id='refresh-button', color='primary')
         ], width=2),
         dbc.Col([
             html.Div(id='tables-container')
@@ -190,7 +165,7 @@ def save_changes(n_clicks, rows, button_id):  # added filename argument
         file_path = os.path.join(directory, button_id['index'])  # Here use 'index' from id to get the file name
         df.to_csv(file_path, index=False)
         print(f"{file_path} saved !")
-    return 'Save'
+    return 'Save :)'
 
 # GO TO LAST PAGE
 @app.callback(
@@ -219,6 +194,28 @@ def handle_refresh(n_clicks, files, palette):
     else:
         return []
 
+#CLEAR FILTERS
+@app.callback(
+    Output({'type': 'dynamic-table', 'index': MATCH}, 'filter_query'),
+    Input({'type': 'dynamic-clear-filter-button', 'index': MATCH}, 'n_clicks'),
+)
+def clear_filter(n_clicks):
+    if n_clicks is not None:
+        return ''  # Reset the filter_query property to an empty string
+    return dash.no_update  # If the button was not clicked, don't update the filter_query
+
+
+
+@app.callback(
+    Output({'type': 'dynamic-clear-filter-button', 'index': MATCH}, 'style'),
+    Input('palette-dropdown', 'value'),
+    State({'type': 'dynamic-clear-filter-button', 'index': MATCH}, 'id'),
+    prevent_initial_call=True  # prevent callback from being fired on initial call
+)
+def update_clear_filter_button_color(selected_palette, button_id):
+    color_list = color_palettes[selected_palette]
+    color_index = color_indices.get(button_id['index'], 0)  # get color_index from the dictionary
+    return {'backgroundColor': color_list[color_index]}
 
 if __name__ == '__main__':
     app.run_server(debug=True)
