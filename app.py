@@ -15,7 +15,25 @@ directory = '/home/david/Documents/tasker/projects'
 # csv_files = [f for f in os.listdir(directory) if f.endswith('.csv')]
 # print(csv_files)
 
-# create a DataTable, "Add Row" button and "Save" button for each CSV file
+color_palettes = {
+    'Palette 1': [
+        "#00FF00", # Lime
+        "#00FFFF", # Aqua
+        "#FF00FF", # Fuchsia
+    ],
+    'Palette 2': [
+        "#008000", # Green
+        "#808000", # Olive
+        "#800080", # Purple
+    ],
+    'Palette 3': [
+        "#C0C0C0", # Silver
+        "#FF6347", # Tomato
+        "#ADFF2F", # GreenYellow
+    ]
+}
+
+
 color_list = [
     "#00FF00", # Lime
     "#00FFFF", # Aqua
@@ -41,13 +59,55 @@ def get_files():
     return csv_files
 
 
+
+
+
+
+
+
 # Define the refresh function
-def refresh(files):
+# def refresh(files,palette ):
+#     colors = color_palettes[palette]
+#     color_counter = 0
+#     children = []
+#     for i, file in enumerate(files):
+#         df = pd.read_csv(os.path.join(directory, file))
+
+
+#         table = dash_table.DataTable(
+#             id={'type': 'dynamic-table', 'index': file}, 
+#             columns=[{"name": c, "id": c} for c in df.columns],
+#             data=df.to_dict('records'),
+#             page_size=5,
+#             page_current= 0, 
+#             editable=True,
+#             filter_action="native" ,
+#             style_header={'backgroundColor': color_list[color_counter]}, # Apply color to table
+#             )
+#         last_page_button = html.Button('Last Page', 
+#                                     id={'type': 'dynamic-last-page-button', 'index': file}, 
+#                                     style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+#         add_button = html.Button('Add Row', 
+#                                 id={'type': 'dynamic-add-button', 'index': file}, 
+#                                 style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+#         save_button = html.Button('Save', 
+#                                 id={'type': 'dynamic-save-button', 'index': file}, 
+#                                 style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+      
+
+#         children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
+
+#         # increment color_counter and use modulo to keep it within the length of color_list
+#         color_counter = (color_counter + 1) % len(colors)
+
+#     return children
+
+def refresh(files, palette):
+    colors = color_palettes[palette]
     color_counter = 0
     children = []
     for i, file in enumerate(files):
         df = pd.read_csv(os.path.join(directory, file))
-
 
         table = dash_table.DataTable(
             id={'type': 'dynamic-table', 'index': file}, 
@@ -56,32 +116,28 @@ def refresh(files):
             page_size=5,
             page_current= 0, 
             editable=True,
-            filter_action="native" ,
-            style_header={'backgroundColor': color_list[color_counter]}, # Apply color to table
-            )
+            filter_action="native",
+            style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
+        )
         last_page_button = html.Button('Last Page', 
                                     id={'type': 'dynamic-last-page-button', 'index': file}, 
-                                    style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+                                    style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
         add_button = html.Button('Add Row', 
                                 id={'type': 'dynamic-add-button', 'index': file}, 
-                                style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+                                style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
         save_button = html.Button('Save', 
                                 id={'type': 'dynamic-save-button', 'index': file}, 
-                                style={'backgroundColor': color_list[color_counter]})  # Apply color to button
+                                style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
       
 
         children.extend([html.H2(file), table, last_page_button, add_button, save_button, html.Hr()])
 
         # increment color_counter and use modulo to keep it within the length of color_list
-        color_counter = (color_counter + 1) % len(color_list)
+        color_counter = (color_counter + 1) % len(colors)
 
     return children
 
 
-# app.layout = html.Div([
-#     dbc.Button('Refresh', id='refresh-button', color='primary'),
-#     html.Div(id='tables-container')
-# ])
 
 app.layout = html.Div([
     dbc.Row([
@@ -93,6 +149,15 @@ app.layout = html.Div([
                 value=[get_files()[0]],
                 multi=True
             ),
+            html.Br(),
+            html.H2("Select Color Palette"),
+            dcc.Dropdown(
+                id='palette-dropdown',
+                options=[{'label': i, 'value': i} for i in color_palettes.keys()],
+                value='Palette 1'
+            ),
+            html.Br(),
+
             dbc.Button('Refresh', id='refresh-button', color='primary')
         ], width=2),
         dbc.Col([
@@ -141,22 +206,19 @@ def go_to_last_page(n_clicks, rows, current_page):
     return dash.no_update
 
 
-
-# @app.callback(
-#     Output('tables-container', 'children'),
-#     [Input('refresh-button', 'n_clicks')]
-# )
-# def handle_refresh(n_clicks):
-#     return refresh()
-
 # HANDLE REFRESH
 @app.callback(
     Output('tables-container', 'children'),
     [Input('refresh-button', 'n_clicks'),
-     Input('file-dropdown', 'value')]
+     Input('file-dropdown', 'value'),
+     Input('palette-dropdown', 'value')]
 )
-def handle_refresh(n_clicks, files):
-    return refresh(files)
+def handle_refresh(n_clicks, files, palette):
+    if files:
+        return refresh(files, palette)
+    else:
+        return []
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
