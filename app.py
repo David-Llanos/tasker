@@ -1,3 +1,8 @@
+# NOTE: Maybe add row should create a new datatable to update the project
+# this way we can combine adding rows and filtering capabilities.
+# This way we could also separate updates on tables and JIRA
+
+
 import os
 import pandas as pd
 import dash
@@ -62,8 +67,38 @@ def refresh(files, palette):
     colors = color_palettes[palette]
     color_counter = 0
     children = []
+    jira_dropdown =[]
     for i, file in enumerate(files):
         df = pd.read_csv(os.path.join(directory, file))
+        # jira_values = df['jira'].dropna().unique() if 'jira' in df.columns else []
+        # jira_dropdown = dcc.Dropdown(
+        #     id={'type': 'dynamic-jira-dropdown', 'index': file}, 
+        #     options=[{"label": value, "value": value} for value in jira_values if pd.notnull(value)],
+        # )
+        # if 'jira' in df.columns:
+        #     jira_values = df['jira'].dropna().unique()
+        #     jira_dropdown = dcc.Dropdown(
+        #         id={'type': 'dynamic-jira-dropdown', 'index': file}, 
+        #         options=[{"label": value, "value": value} for value in jira_values if pd.notnull(value)],
+        #     )
+        #     children.append(jira_dropdown)
+
+
+        if 'jira' in df.columns:
+            jira_issues = df['jira'].dropna().unique()
+            jira_issues_options = [{'label': i, 'value': i} for i in jira_issues]
+            jira_dropdown = html.Div([  # Wrap the Label and Dropdown within a Div
+                html.Label('Select JIRA Issue:'),  # Add this line to create a label
+                dcc.Dropdown(
+                    id={'type': 'dynamic-jira-dropdown', 'index': file},
+                    options=jira_issues_options,
+                    value=jira_issues[0] if len(jira_issues) > 0 else None
+                )
+            ])
+            # children.append(jira_dropdown)
+        else:
+            jira_dropdown = None
+
 
         table = dash_table.DataTable(
             id={'type': 'dynamic-table', 'index': file}, 
@@ -74,7 +109,26 @@ def refresh(files, palette):
             editable=True,
             filter_action="native",
             style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
+            style_cell={
+            'width': '{}%'.format(100./len(df.columns)),
+            'textOverflow': 'ellipsis',
+            'overflow': 'hidden'}
+            )
+
+
+        second_table = dash_table.DataTable(
+            id={'type': 'dynamic-second-table', 'index': file},
+            columns=[{"name": c, "id": c} for c in df.columns],
+            data=[{c: '' for c in df.columns}],
+            editable=True,
+            style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
+            style_cell={
+            'width': '{}%'.format(100./len(df.columns)),
+            'textOverflow': 'ellipsis',
+            'overflow': 'hidden'}
         )
+
+
         last_page_button = html.Button('last page', 
                                     id={'type': 'dynamic-last-page-button', 'index': file}, 
                                     style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
@@ -93,7 +147,21 @@ def refresh(files, palette):
 
    
         color_indices[file] = color_counter 
-        children.extend([html.H2(file), table, clear_filter_button, last_page_button, add_button, save_button,  html.Hr()])
+        children.extend([html.H2(file), table, html.Br(), 
+                         jira_dropdown, second_table, html.Br(),
+                         clear_filter_button, last_page_button, 
+                         add_button, save_button,  html.Hr()])
+        
+        # children.extend([html.H2(file), table, add_row_table, last_page_button, add_button, save_button, clear_filter_button])
+        # if 'jira' in df.columns:
+        #     jira_values = df['jira'].dropna().unique()
+        #     jira_dropdown = dcc.Dropdown(
+        #         id={'type': 'dynamic-jira-dropdown', 'index': file}, 
+        #         options=[{"label": value, "value": value} for value in jira_values if pd.notnull(value)],
+        #     )
+        # children.append(jira_dropdown)
+        # children.append(html.Hr())
+
 
 
         # increment color_counter and use modulo to keep it within the length of color_list
