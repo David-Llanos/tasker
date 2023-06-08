@@ -40,6 +40,11 @@ color_palettes = {
         "#ADD8E6", # Light Blue
         "#90EE90", # Light Green
         "#FFB6C1", # Light Pink
+    ],
+    'David': [
+        "#C0C0C0", # Silver
+        "#FF6347", # Tomato
+        "#ADFF2F", # GreenYellow
     ]
 }
 
