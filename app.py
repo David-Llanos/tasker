@@ -16,42 +16,35 @@ directory = '/home/david/Documents/tasker/projects'
 # print(csv_files)
 
 color_palettes = {
-    'Palette 1': [
-        "#00FF00", # Lime
-        "#00FFFF", # Aqua
-        "#FF00FF", # Fuchsia
+    'Contrasting': [
+        "#FF0000", # Red
+        "#00FF00", # Green
+        "#0000FF", # Blue
     ],
-    'Palette 2': [
-        "#008000", # Green
-        "#808000", # Olive
-        "#800080", # Purple
+    'Pastel': [
+        "#FFB3BA", # Light Red
+        "#FFDFBA", # Light Orange
+        "#FFFFBA", # Light Yellow
     ],
-    'Palette 3': [
-        "#C0C0C0", # Silver
-        "#FF6347", # Tomato
-        "#ADFF2F", # GreenYellow
+    'Dark': [
+        "#8B0000", # Dark Red
+        "#006400", # Dark Green
+        "#00008B", # Dark Blue
+    ],
+    'Vivid': [
+        "#FF4500", # OrangeRed
+        "#7FFF00", # Chartreuse
+        "#00BFFF", # DeepSkyBlue
+    ],
+    'Light': [
+        "#ADD8E6", # Light Blue
+        "#90EE90", # Light Green
+        "#FFB6C1", # Light Pink
     ]
 }
 
 
-color_list = [
-    "#00FF00", # Lime
-    "#00FFFF", # Aqua
-    "#FF00FF", # Fuchsia
-    # "#800000", # Maroon
-    "#008000", # Green
-    "#808000", # Olive
-    "#800080", # Purple
-    "#008080", # Teal
-    "#C0C0C0", # Silver
-    "#FF6347", # Tomato
-    "#ADFF2F", # GreenYellow
-    "#FFD700", # Gold
-    "#1E90FF", # DodgerBlue
-    "#DDA0DD", # Plum
-    "#20B2AA", # LightSeaGreen
-    "#FFA07A"  # LightSalmon
-]
+
 
 color_indices = {}
 
@@ -127,7 +120,7 @@ app.layout = html.Div([
             dcc.Dropdown(
                 id='palette-dropdown',
                 options=[{'label': i, 'value': i} for i in color_palettes.keys()],
-                value='Palette 1',
+                value='Pastel',
                 persistence=True,
                 persistence_type='local' 
             ),
