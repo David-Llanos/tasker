@@ -67,37 +67,55 @@ def refresh(files, palette):
     colors = color_palettes[palette]
     color_counter = 0
     children = []
-    jira_dropdown =[]
     for i, file in enumerate(files):
         df = pd.read_csv(os.path.join(directory, file))
-        # jira_values = df['jira'].dropna().unique() if 'jira' in df.columns else []
-        # jira_dropdown = dcc.Dropdown(
-        #     id={'type': 'dynamic-jira-dropdown', 'index': file}, 
-        #     options=[{"label": value, "value": value} for value in jira_values if pd.notnull(value)],
-        # )
-        # if 'jira' in df.columns:
-        #     jira_values = df['jira'].dropna().unique()
-        #     jira_dropdown = dcc.Dropdown(
-        #         id={'type': 'dynamic-jira-dropdown', 'index': file}, 
-        #         options=[{"label": value, "value": value} for value in jira_values if pd.notnull(value)],
-        #     )
-        #     children.append(jira_dropdown)
 
-
+  
         if 'jira' in df.columns:
             jira_issues = df['jira'].dropna().unique()
             jira_issues_options = [{'label': i, 'value': i} for i in jira_issues]
-            jira_dropdown = html.Div([  # Wrap the Label and Dropdown within a Div
-                html.Label('Select JIRA Issue:'),  # Add this line to create a label
-                dcc.Dropdown(
-                    id={'type': 'dynamic-jira-dropdown', 'index': file},
-                    options=jira_issues_options,
-                    value=jira_issues[0] if len(jira_issues) > 0 else None
-                )
-            ])
-            # children.append(jira_dropdown)
+
+            # [
+            #         {'label': i, 'value': i}
+            #         for i in df['A'].unique()
+            #     ]    
+
+            data_for_second_table = {c: [''] for c in df.columns}
+            # If jira_issues_options is not empty, use the first option as the default value for the 'jira' column
+            if jira_issues_options:
+                data_for_second_table = {c: '' for c in df.columns}
+
+            second_table = dash_table.DataTable(
+                id={'type': 'dynamic-second-table', 'index': file},
+                columns=[{"name": c, "id": c} for c in df.columns],
+                data=[data_for_second_table],
+                editable=True,
+                dropdown={
+                    'jira': {
+                        'options': jira_issues_options,
+                        # 'value':  jira_issues_options[0]                       
+                    }
+                },
+                style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
+                style_cell={
+                    'width': '{}%'.format(len(df.columns)),
+                    'textOverflow': 'ellipsis',
+                    'overflow': 'hidden'
+                }
+            )
         else:
-            jira_dropdown = None
+            second_table = dash_table.DataTable(
+                id={'type': 'dynamic-second-table', 'index': file},
+                columns=[{"name": c, "id": c} for c in df.columns],
+                data=[{c: '' for c in df.columns}],
+                editable=True,
+                style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
+                style_cell={
+                    'width': '{}%'.format(len(df.columns)),
+                    'textOverflow': 'ellipsis',
+                    'overflow': 'hidden'
+                }
+            )
 
 
         table = dash_table.DataTable(
@@ -116,19 +134,6 @@ def refresh(files, palette):
             )
 
 
-        second_table = dash_table.DataTable(
-            id={'type': 'dynamic-second-table', 'index': file},
-            columns=[{"name": c, "id": c} for c in df.columns],
-            data=[{c: '' for c in df.columns}],
-            editable=True,
-            style_header={'backgroundColor': colors[color_counter]},  # Use colors from selected palette
-            style_cell={
-            'width': '{}%'.format(100./len(df.columns)),
-            'textOverflow': 'ellipsis',
-            'overflow': 'hidden'}
-        )
-
-
         last_page_button = html.Button('last page', 
                                     id={'type': 'dynamic-last-page-button', 'index': file}, 
                                     style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
@@ -138,33 +143,32 @@ def refresh(files, palette):
         save_button = html.Button('Save :)', 
                                 id={'type': 'dynamic-save-button', 'index': file}, 
                                 style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
-        
+        update_button = html.Button('Update JIRA', 
+                                id={'type': 'dynamic-update-button', 'index': file}, 
+                                style={'backgroundColor': colors[color_counter]})  # Use colors from selected palette
 
-        #
         clear_filter_button = html.Button('clear all filters', 
                                   id={'type': 'dynamic-clear-filter-button', 'index': file}, 
                                   style={'backgroundColor': colors[color_counter]})  # Apply color from selected palette
 
    
-        color_indices[file] = color_counter 
-        children.extend([html.H2(file), table, html.Br(), 
-                         jira_dropdown, second_table, html.Br(),
-                         clear_filter_button, last_page_button, 
-                         add_button, save_button,  html.Hr()])
+
+        color_indices[file] = color_counter
+        children.extend([
+            html.H2(file), 
+            table, 
+            clear_filter_button, 
+            last_page_button, 
+            add_button, 
+            save_button, 
+            html.Hr(), 
+            second_table,
+            update_button,
+            html.Hr(), 
+
+        ])
         
-        # children.extend([html.H2(file), table, add_row_table, last_page_button, add_button, save_button, clear_filter_button])
-        # if 'jira' in df.columns:
-        #     jira_values = df['jira'].dropna().unique()
-        #     jira_dropdown = dcc.Dropdown(
-        #         id={'type': 'dynamic-jira-dropdown', 'index': file}, 
-        #         options=[{"label": value, "value": value} for value in jira_values if pd.notnull(value)],
-        #     )
-        # children.append(jira_dropdown)
-        # children.append(html.Hr())
 
-
-
-        # increment color_counter and use modulo to keep it within the length of color_list
         color_counter = (color_counter + 1) % len(colors)
 
     return children
@@ -204,6 +208,8 @@ app.layout = html.Div([
     ])
 ])
 
+
+CALLBACKS=[]
 
 # ADD ROW
 @app.callback(
@@ -268,7 +274,7 @@ def clear_filter(n_clicks):
     return dash.no_update  # If the button was not clicked, don't update the filter_query
 
 
-
+#UPDATE CLEAR FILTER BUTTON
 @app.callback(
     Output({'type': 'dynamic-clear-filter-button', 'index': MATCH}, 'style'),
     Input('palette-dropdown', 'value'),
